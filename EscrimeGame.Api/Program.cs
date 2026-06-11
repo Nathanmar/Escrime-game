@@ -40,4 +40,28 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Initialisation automatique de la base de données
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<EscrimeDbContext>();
+    
+    // Applique automatiquement les migrations (crée la BDD si elle n'existe pas)
+    context.Database.Migrate();
+
+    // Seed automatique s'il n'y a pas de joueurs
+    if (!context.Players.Any())
+    {
+        var heroes = new List<Player>
+        {
+            new Player { Name = "Sir Galahad", CharacterClass = "Paladin", Icon = "🛡️" },
+            new Player { Name = "Dame Morgane", CharacterClass = "Mage", Icon = "🧙‍♀️" },
+            new Player { Name = "Chevalier Noir", CharacterClass = "Chevalier Obscur", Icon = "🗡️" },
+            new Player { Name = "Lancelot", CharacterClass = "Chevalier", Icon = "⚔️" },
+            new Player { Name = "Merlin", CharacterClass = "Enchanteur", Icon = "🔮" }
+        };
+        context.Players.AddRange(heroes);
+        context.SaveChanges();
+    }
+}
+
 app.Run();
