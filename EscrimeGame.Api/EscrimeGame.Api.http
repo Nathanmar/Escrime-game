@@ -1,0 +1,6 @@
+@EscrimeGame.Api_HostAddress = http://localhost:5136
+
+GET {{EscrimeGame.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
