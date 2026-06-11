@@ -9,6 +9,9 @@ public class MatchResult
         Loss   // Défaite
     }
 
+    public int Id { get; set; }
+    public int PlayerId { get; set; }
+    
     public Result Outcome { get; set; }
 
     // Constructeur pour faciliter les tests
