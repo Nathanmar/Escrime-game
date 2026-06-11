@@ -1,6 +1,8 @@
 export interface Player {
     id: number;
     name: string;
+    characterClass: string;
+    icon: string;
     isDisqualified: boolean;
     penaltyPoints: number;
 }

@@ -131,6 +131,91 @@ h1 {
   color: #888;
 }
 
+/* Arena Animations */
+.arena {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid #ff007f;
+  border-radius: 12px;
+  padding: 4rem 2rem;
+  margin: 2rem 0;
+  min-height: 300px;
+  position: relative;
+  overflow: hidden;
+}
+
+.fighter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.fighter.clashing-left {
+  animation: clash-left 0.5s ease-in-out infinite alternate, shake 0.2s linear infinite;
+}
+
+.fighter.clashing-right {
+  animation: clash-right 0.5s ease-in-out infinite alternate, shake 0.2s linear infinite;
+}
+
+.fighter.loser {
+  filter: grayscale(100%);
+  opacity: 0.3;
+  transform: scale(0.8) rotate(90deg);
+  transition: all 1s ease-in-out;
+}
+
+.fighter.winner {
+  transform: scale(1.3);
+  text-shadow: 0 0 20px #ff007f;
+  transition: all 1s ease-in-out;
+}
+
+@keyframes clash-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(100px); }
+}
+
+@keyframes clash-right {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100px); }
+}
+
+@keyframes shake {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  25% { transform: translate(-1px, -2px) rotate(-1deg); }
+  50% { transform: translate(-3px, 0px) rotate(1deg); }
+  75% { transform: translate(3px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -1px) rotate(0deg); }
+}
+
+.vs-text {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #ff007f;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.select-hero {
+  padding: 0.5rem;
+  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid #7928ca;
+  border-radius: 8px;
+  margin: 0 1rem;
+}
+
+
 button {
   border-radius: 8px;
   border: 1px solid transparent;
