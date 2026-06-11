@@ -37,3 +37,8 @@ TestResults/
 *.trx
 *.coverage
 coverage.xml
+
+## Databases
+*.db
+*.db-shm
+*.db-wal
