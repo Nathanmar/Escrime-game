@@ -12,6 +12,14 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<EscrimeDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=escrime.db"));
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    });
+});
+
 // Register domain services
 builder.Services.AddScoped<ScoreCalculator>();
 builder.Services.AddScoped<TournamentRanking>();
@@ -25,6 +33,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors();
 
 app.UseAuthorization();
 
