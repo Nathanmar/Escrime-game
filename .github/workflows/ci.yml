@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  contents: read
+  checks: write        # pour publier le rapport de test
+  pull-requests: write # pour commenter les PR avec la couverture
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Job 1 : Build & Tests .NET + couverture
+  # ─────────────────────────────────────────────
+  dotnet-ci:
+    name: ".NET 9 — Build, Tests & Couverture"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── SDK .NET ──
+      - name: Installer .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      # ── Cache NuGet ──
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      # ── Restauration ──
+      - name: Restaurer les dépendances
+        run: dotnet restore EscrimeGame.sln
+
+      # ── Build ──
+      - name: Build (Release)
+        run: dotnet build EscrimeGame.sln --no-restore --configuration Release
+
+      # ── Tests + couverture (format Cobertura) ──
+      - name: Exécuter les tests avec couverture
+        run: >
+          dotnet test EscrimeGame.sln
+          --no-build
+          --configuration Release
+          --logger "trx;LogFileName=test-results.trx"
+          --collect:"XPlat Code Coverage"
+          --results-directory ./TestResults
+          --
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+
+      # ── Rapport HTML + résumé Markdown via ReportGenerator ──
+      - name: Générer le rapport de couverture
+        uses: danielpalme/ReportGenerator-GitHub-Action@5
+        with:
+          reports: "TestResults/**/coverage.cobertura.xml"
+          targetdir: "TestResults/CoverageReport"
+          reporttypes: "HtmlInline;MarkdownSummaryGithub;Cobertura"
+          verbosity: "Warning"
+
+      # ── Publier le résumé dans GitHub Actions Job Summary ──
+      - name: Publier la couverture dans le Job Summary
+        run: cat TestResults/CoverageReport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+
+      # ── Commenter la PR avec le delta de couverture (si PR) ──
+      - name: Commenter la PR avec la couverture
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          recreate: true
+          path: TestResults/CoverageReport/SummaryGithub.md
+
+      # ── Publier les résultats de test dans l'UI GitHub ──
+      - name: Publier les résultats de test (.trx)
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: "Résultats NUnit"
+          path: "TestResults/*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
+
+      # ── Archiver le rapport HTML complet ──
+      - name: Archiver le rapport de couverture HTML
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: TestResults/CoverageReport/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────
+  # Job 2 : Build du frontend Vite / TypeScript
+  # ─────────────────────────────────────────────
+  frontend-ci:
+    name: "Frontend — TypeScript & Build Vite"
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: escrime-web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: escrime-web/package.json
+
+      - name: Installer les dépendances
+        run: npm install
+
+      - name: Vérification TypeScript
+        run: npx tsc --noEmit
+
+      - name: Build de production
+        run: npm run build
